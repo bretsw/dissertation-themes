@@ -1,0 +1,132 @@
+---
+title: "Dissertation themes"
+author: "K. Bret Staudt Willet"
+date: "7/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+library(hrbrthemes)
+library(viridis)
+library(seriation)
+
+themes <- read_csv("dissertation-themes-raw-count.csv")
+```
+
+```{r, include=FALSE}
+themes_data <-
+        themes %>% 
+        column_to_rownames('X1')
+names(themes_data) <- c("Amelia", "Anne",  "Blair",  "Hallie", "Julie", 
+                   "Mike", "Simone", "Taylor",  "Wallace")
+themes_matrix <- as.matrix(themes_data)
+```
+
+## Heatmap plots of themes from interviews with new teachers
+
+These plots provide a very quick and rough look at clusters of new teachers and self-reported themes from interviews using the `heatmap()` function from {base} R and `geom_tile()` from {ggplot2}.
+
+### Heatmap in {base} R, Viridis colors, Scaled but Unordered
+
+```{r, echo=FALSE,  fig.width=16, fig.height=9}
+heatmap(themes_matrix, Rowv = NA, Colv = NA, scale = 'column',col = viridis(256))
+```
+
+### Heatmap in {base} R, Viridis colors, Scaled and Computationally-sorted
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+heatmap(themes_matrix, scale = 'column',col = viridis(256))
+```
+
+### Heatmap in {base} R, Heat colors, Scaled and Computationally-sorted
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+heatmap(themes_matrix, scale = 'column', col = heat.colors(256))
+```
+
+### Heatmap in {ggplot2}, Viridis colors, Scaled but Unordered
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+rescale <- function(x) {x * 20 / max(x, na.rm = TRUE)}
+
+themes_to_plot_unordered <-
+        themes_data %>%
+        rownames_to_column(var = "theme") %>%
+        mutate(across(Amelia:Wallace, rescale)) %>%
+        pivot_longer(cols = Amelia:Wallace, 
+                     names_to = "name")
+
+ggplot(themes_to_plot_unordered, aes(x = name, y = theme)) +
+        geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
+        scale_fill_viridis(discrete = FALSE) +
+        #coord_fixed(ratio = .4) +
+        xlab("Participant") +
+        ylab("Code") +
+        scale_y_discrete(position='right') +
+        theme_bw() +
+        theme(axis.title = element_text(size=32, family='serif'),
+              axis.text = element_text(size=18, family='serif'),
+              legend.title=element_text(size=18, family='serif'), 
+              legend.text=element_text(size=12, family='serif'),
+              legend.position='left',
+              panel.background=element_blank(),
+              panel.border=element_blank(),
+              panel.grid.major=element_blank(),
+              panel.grid.minor=element_blank(),
+              plot.background=element_blank()
+        ) +
+        labs(fill = "Scaled Value")
+```
+
+### Heatmap in {ggplot2}, Viridis colors, Scaled and Computationally-sorted 
+
+This final plot uses principal component analysis (PCA) through the {seriation} package to sort and cluster the heatmap both by most-similar participants and related themes. 
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+themes_scaled_ordered <-
+        themes_data %>%
+        rownames_to_column(var = "theme") %>%
+        mutate(across(Amelia:Wallace, rescale)) %>%
+        column_to_rownames('theme') %>%
+        as.matrix() %>%
+        seriate()
+
+new_levels_scaled_theme <- row.names(themes_matrix)[get_order(themes_scaled_ordered, dim=1)]
+new_levels_scaled_name <- colnames(themes_matrix)[get_order(themes_scaled_ordered, dim=2)]
+
+themes_to_plot_ordered <- 
+        themes_to_plot_unordered
+themes_to_plot_ordered$theme <- 
+        factor(themes_to_plot_ordered$theme, levels = new_levels_scaled_theme)
+themes_to_plot_ordered$name <- 
+        factor(themes_to_plot_ordered$name, levels = new_levels_scaled_name)
+
+ggplot(themes_to_plot_ordered, aes(x = name, y = theme)) +
+        geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
+        scale_fill_viridis(discrete = FALSE) +
+        #coord_fixed(ratio = .4) +
+        xlab("Participant") +
+        ylab("Code") +
+        scale_y_discrete(position='right') +
+        theme_bw() +
+        theme(axis.title = element_text(size=32, family='serif'),
+              axis.text = element_text(size=18, family='serif'),
+              legend.title=element_text(size=18, family='serif'), 
+              legend.text=element_text(size=12, family='serif'),
+              legend.position='left',
+              panel.background=element_blank(),
+              panel.border=element_blank(),
+              panel.grid.major=element_blank(),
+              panel.grid.minor=element_blank(),
+              plot.background=element_blank()
+        ) +
+        labs(fill = "Scaled Value")
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggsave("dissertation-themes-heatmap-sorted.png", width = 16, height = 9)
+```
