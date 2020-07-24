@@ -1,7 +1,7 @@
 ---
 title: "Dissertation themes"
 author: "K. Bret Staudt Willet"
-date: "7/9/2020"
+date: "7/24/2020"
 output: html_document
 ---
 
@@ -14,7 +14,8 @@ library(hrbrthemes)
 library(viridis)
 library(seriation)
 
-themes <- read_csv("dissertation-themes-raw-count.csv")
+themes <- read_csv("dissertation-code-document-table.csv")
+modalities <- read_csv("dissertation-code-cooccurrence.csv")
 ```
 
 ```{r, include=FALSE}
@@ -24,6 +25,12 @@ themes_data <-
 names(themes_data) <- c("Amelia", "Anne",  "Blair",  "Hallie", "Julie", 
                    "Mike", "Simone", "Taylor",  "Wallace")
 themes_matrix <- as.matrix(themes_data)
+
+modalities_data <-
+        modalities %>% 
+        column_to_rownames('X1')
+names(modalities_data) <- c("offline", "online_grad_school", "social_media")
+modalities_matrix <- as.matrix(modalities_data)
 ```
 
 ## Heatmap plots of themes from interviews with new teachers
@@ -48,15 +55,15 @@ heatmap(themes_matrix, scale = 'column',col = viridis(256))
 heatmap(themes_matrix, scale = 'column', col = heat.colors(256))
 ```
 
-### Heatmap in {ggplot2}, Viridis colors, Scaled but Unordered
+### Themes Heatmap in {ggplot2}, Viridis colors, Scaled but Unordered
 
 ```{r, echo=FALSE, fig.width=16, fig.height=9}
-rescale <- function(x) {x * 20 / max(x, na.rm = TRUE)}
+rescale_themes <- function(x) {x * 20 / max(x, na.rm = TRUE)}
 
 themes_to_plot_unordered <-
         themes_data %>%
         rownames_to_column(var = "theme") %>%
-        mutate(across(Amelia:Wallace, rescale)) %>%
+        mutate(across(Amelia:Wallace, rescale_themes)) %>%
         pivot_longer(cols = Amelia:Wallace, 
                      names_to = "name")
 
@@ -82,7 +89,7 @@ ggplot(themes_to_plot_unordered, aes(x = name, y = theme)) +
         labs(fill = "Scaled Value")
 ```
 
-### Heatmap in {ggplot2}, Viridis colors, Scaled and Computationally-sorted 
+### Themes Heatmap in {ggplot2}, Viridis colors, Scaled and Computationally-sorted 
 
 This final plot uses principal component analysis (PCA) through the {seriation} package to sort and cluster the heatmap both by most-similar participants and related themes. 
 
@@ -90,7 +97,7 @@ This final plot uses principal component analysis (PCA) through the {seriation} 
 themes_scaled_ordered <-
         themes_data %>%
         rownames_to_column(var = "theme") %>%
-        mutate(across(Amelia:Wallace, rescale)) %>%
+        mutate(across(Amelia:Wallace, rescale_themes)) %>%
         column_to_rownames('theme') %>%
         as.matrix() %>%
         seriate()
@@ -129,4 +136,87 @@ ggplot(themes_to_plot_ordered, aes(x = name, y = theme)) +
 
 ```{r, include=FALSE, eval=FALSE}
 ggsave("dissertation-themes-heatmap-sorted.png", width = 16, height = 9)
+```
+
+### Modalities Heatmap in {ggplot2}, Viridis colors, Scaled but Unordered
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+rescale_modalities <- function(x) {x * 20 / max(x, na.rm = TRUE)}
+
+modalities_to_plot_unordered <-
+        modalities_data %>%
+        rownames_to_column(var = "theme") %>%
+        mutate(across(offline:social_media, rescale_modalities)) %>%
+        pivot_longer(cols = offline:social_media, 
+                     names_to = "modality")
+
+ggplot(modalities_to_plot_unordered, aes(x = modality, y = theme)) +
+        geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
+        scale_fill_viridis(discrete = FALSE) +
+        #coord_fixed(ratio = .4) +
+        xlab("Modality") +
+        ylab("Theme") +
+        scale_y_discrete(position='right') +
+        theme_bw() +
+        theme(axis.title = element_text(size=32, family='serif'),
+              axis.text = element_text(size=18, family='serif'),
+              legend.title=element_text(size=18, family='serif'), 
+              legend.text=element_text(size=12, family='serif'),
+              legend.position='left',
+              panel.background=element_blank(),
+              panel.border=element_blank(),
+              panel.grid.major=element_blank(),
+              panel.grid.minor=element_blank(),
+              plot.background=element_blank()
+        ) +
+        labs(fill = "Scaled Value")
+```
+
+### Modalities Heatmap in {ggplot2}, Viridis colors, Scaled and Computationally-sorted 
+
+This final plot uses principal component analysis (PCA) through the {seriation} package to sort and cluster the heatmap both by modalities and themes. 
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+modalities_scaled_ordered <-
+        modalities_data %>%
+        rownames_to_column(var = "theme") %>%
+        mutate(across(offline:social_media, rescale_modalities)) %>%
+        column_to_rownames('theme') %>%
+        as.matrix() %>%
+        seriate()
+
+new_levels_scaled_theme <- row.names(modalities_matrix)[get_order(modalities_scaled_ordered, dim=1)]
+new_levels_scaled_modality <- colnames(modalities_matrix)[get_order(modalities_scaled_ordered, dim=2)]
+
+modalities_to_plot_ordered <- 
+        modalities_to_plot_unordered
+modalities_to_plot_ordered$theme <- 
+        factor(modalities_to_plot_ordered$theme, levels = new_levels_scaled_theme)
+modalities_to_plot_ordered$modality <- 
+        factor(modalities_to_plot_ordered$modality, levels = new_levels_scaled_modality)
+
+ggplot(modalities_to_plot_ordered, aes(x = modality, y = theme)) +
+        geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
+        scale_fill_viridis(discrete = FALSE) +
+        #coord_fixed(ratio = .4) +
+        xlab("Modality") +
+        ylab("Theme") +
+        scale_y_discrete(position='right') +
+        theme_bw() +
+        theme(axis.title = element_text(size=32, family='serif'),
+              axis.text = element_text(size=18, family='serif'),
+              legend.title=element_text(size=18, family='serif'), 
+              legend.text=element_text(size=12, family='serif'),
+              legend.position='left',
+              panel.background=element_blank(),
+              panel.border=element_blank(),
+              panel.grid.major=element_blank(),
+              panel.grid.minor=element_blank(),
+              plot.background=element_blank()
+        ) +
+        labs(fill = "Scaled Value")
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggsave("dissertation-modalities-heatmap-sorted.png", width = 16, height = 9)
 ```
