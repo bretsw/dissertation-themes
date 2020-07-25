@@ -1,7 +1,7 @@
 ---
 title: "Dissertation themes"
 author: "K. Bret Staudt Willet"
-date: "7/24/2020"
+date: "7/25/2020"
 output: html_document
 ---
 
@@ -148,7 +148,7 @@ ggplot(themes_to_plot_ordered, aes(x = name, y = theme)) +
 ```
 
 ```{r, include=FALSE, eval=FALSE}
-ggsave("dissertation-themes-heatmap-sorted2.png", width = 16, height = 9)
+ggsave("dissertation-themes-heatmap-sorted.png", width = 16, height = 9)
 ```
 
 ### Themes Heatmap in {ggplot2}, Viridis colors, Scaled by percent presence, and Computationally-sorted 
@@ -191,21 +191,24 @@ ggplot(themes_to_plot_ordered2, aes(x = name, y = theme)) +
         #scale_fill_viridis(discrete = FALSE) +
         #coord_fixed(ratio = .4) +
         xlab("Participant") +
-        ylab("Code") +
+        scale_x_discrete(position='top') +
+        ylab("Thematic Code") +
         scale_y_discrete(position='right') +
         theme_bw() +
         theme(axis.title = element_text(size=32, family='serif'),
               axis.text = element_text(size=18, family='serif'),
-              legend.title=element_text(size=18, family='serif'), 
-              legend.text=element_text(size=12, family='serif'),
-              legend.position='left',
-              panel.background=element_blank(),
-              panel.border=element_blank(),
-              panel.grid.major=element_blank(),
-              panel.grid.minor=element_blank(),
-              plot.background=element_blank()
+              legend.title = element_text(size=18, family='serif'), 
+              legend.text = element_text(size=12, family='serif'),
+              legend.position='bottom',
+              legend.background = element_blank(),
+              legend.box.background = element_rect(colour='black'),
+              panel.background = element_blank(),
+              panel.border = element_blank(),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.background = element_blank()
         ) +
-        labs(fill = "Scaled Value")
+        labs(fill = "Percentage of Quotations")
 ```
 
 ```{r, include=FALSE, eval=FALSE}
