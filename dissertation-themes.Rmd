@@ -22,8 +22,21 @@ modalities <- read_csv("dissertation-code-cooccurrence.csv")
 themes_data <-
         themes %>% 
         column_to_rownames('X1')
-names(themes_data) <- c("Amelia", "Anne",  "Blair",  "Hallie", "Julie", 
-                   "Mike", "Simone", "Taylor",  "Wallace")
+names(themes_data) <- 
+        c("Amelia", "Anne",  "Blair",  "Hallie", "Julie", 
+          "Mike", "Simone", "Taylor",  "Wallace")
+row.names(themes_data) <- 
+        c("Modality: Offline", "Modality: Online grad school", "Modality: Social media",
+          "Reasons: School resources", "Reasons: Change", 
+          "Reasons: Personal-professional boundaries", "Reasons: Teacher capital",
+          "Reasons: Two-worlds pitfall", "Reasons: Connecting", "Reasons: Enacting practice",
+          "Reasons: Learning through observation", "Reasons: Planning",
+          "Supports: Assigned and appreciated", "Supports: Assigned but unhelpful",
+          "Supports: Latent",  "Supports: Self-directed",
+          "Relationships: In-school", "Relationships: Out-of-school",
+          "Engagement: Information consumer",  "Engagement: Self-seeking contributor",
+          "Engagement: Vocationalist"
+          )
 themes_matrix <- as.matrix(themes_data)
 
 modalities_data <-
@@ -108,9 +121,9 @@ new_levels_scaled_name <- colnames(themes_matrix)[get_order(themes_scaled_ordere
 themes_to_plot_ordered <- 
         themes_to_plot_unordered
 themes_to_plot_ordered$theme <- 
-        factor(themes_to_plot_ordered$theme, levels = new_levels_scaled_theme)
+        factor(themes_to_plot_ordered$theme, levels = rev(new_levels_scaled_theme))
 themes_to_plot_ordered$name <- 
-        factor(themes_to_plot_ordered$name, levels = new_levels_scaled_name)
+        factor(themes_to_plot_ordered$name, levels = rev(new_levels_scaled_name))
 
 ggplot(themes_to_plot_ordered, aes(x = name, y = theme)) +
         geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
