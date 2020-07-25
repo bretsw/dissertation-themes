@@ -102,7 +102,7 @@ ggplot(themes_to_plot_unordered, aes(x = name, y = theme)) +
         labs(fill = "Scaled Value")
 ```
 
-### Themes Heatmap in {ggplot2}, Viridis colors, Scaled and Computationally-sorted 
+### Themes Heatmap in {ggplot2}, Viridis colors, Scaled by max value, and Computationally-sorted 
 
 This final plot uses principal component analysis (PCA) through the {seriation} package to sort and cluster the heatmap both by most-similar participants and related themes. 
 
@@ -148,7 +148,68 @@ ggplot(themes_to_plot_ordered, aes(x = name, y = theme)) +
 ```
 
 ```{r, include=FALSE, eval=FALSE}
-ggsave("dissertation-themes-heatmap-sorted.png", width = 16, height = 9)
+ggsave("dissertation-themes-heatmap-sorted2.png", width = 16, height = 9)
+```
+
+### Themes Heatmap in {ggplot2}, Viridis colors, Scaled by percent presence, and Computationally-sorted 
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+themes_quote_count <- c(36, 35, 26, 35, 38, 28, 34, 26, 38)
+themes_scaled <- themes_matrix
+for(i in 1:9) {
+       themes_scaled[, i] <- 
+               100 * themes_scaled[, i] / themes_quote_count[i]
+}
+
+themes_scaled_ordered2 <- seriate(themes_scaled)
+
+new_levels_scaled_theme2 <- row.names(themes_matrix)[get_order(themes_scaled_ordered2, dim=1)]
+new_levels_scaled_name2 <- colnames(themes_matrix)[get_order(themes_scaled_ordered2, dim=2)]
+
+themes_to_plot_ordered2 <- 
+        themes_scaled %>%
+        as_tibble() %>%
+        mutate(theme = row.names(themes_scaled)) %>%
+        select(theme, everything()) %>%
+        pivot_longer(cols = Amelia:Wallace, 
+                     names_to = "name")
+themes_to_plot_ordered2$theme <- 
+        factor(themes_to_plot_ordered2$theme, levels = rev(new_levels_scaled_theme2))
+themes_to_plot_ordered2$name <- 
+        factor(themes_to_plot_ordered2$name, levels = rev(new_levels_scaled_name2))
+
+ggplot(themes_to_plot_ordered2, aes(x = name, y = theme)) +
+        geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
+        scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
+                ifelse(x < 50, 
+                       scales::rescale(x,
+                                       to = to,
+                                       from = c(min(x, na.rm = TRUE), 50)),
+                       1)
+        }
+        ) +
+        #scale_fill_viridis(discrete = FALSE) +
+        #coord_fixed(ratio = .4) +
+        xlab("Participant") +
+        ylab("Code") +
+        scale_y_discrete(position='right') +
+        theme_bw() +
+        theme(axis.title = element_text(size=32, family='serif'),
+              axis.text = element_text(size=18, family='serif'),
+              legend.title=element_text(size=18, family='serif'), 
+              legend.text=element_text(size=12, family='serif'),
+              legend.position='left',
+              panel.background=element_blank(),
+              panel.border=element_blank(),
+              panel.grid.major=element_blank(),
+              panel.grid.minor=element_blank(),
+              plot.background=element_blank()
+        ) +
+        labs(fill = "Scaled Value")
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggsave("dissertation-themes-heatmap-sorted2.png", width = 16, height = 9)
 ```
 
 ### Modalities Heatmap in {ggplot2}, Viridis colors, Scaled but Unordered
