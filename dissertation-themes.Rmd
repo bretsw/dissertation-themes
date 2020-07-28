@@ -1,7 +1,7 @@
 ---
 title: "Dissertation themes"
 author: "K. Bret Staudt Willet"
-date: "7/25/2020"
+date: "7/27/2020"
 output: html_document
 ---
 
@@ -42,7 +42,18 @@ themes_matrix <- as.matrix(themes_data)
 modalities_data <-
         modalities %>% 
         column_to_rownames('X1')
-names(modalities_data) <- c("offline", "online_grad_school", "social_media")
+names(modalities_data) <- c("Offline", "Online Grad School", "Social Media")
+row.names(modalities_data) <- 
+        c("Reasons: School resources", "Reasons: Change", 
+          "Reasons: Personal-professional boundaries", "Reasons: Teacher capital",
+          "Reasons: Two-worlds pitfall", "Reasons: Connecting", "Reasons: Enacting practice",
+          "Reasons: Learning through observation", "Reasons: Planning",
+          "Supports: Assigned and appreciated", "Supports: Assigned but unhelpful",
+          "Supports: Latent",  "Supports: Self-directed",
+          "Relationships: In-school", "Relationships: Out-of-school",
+          "Engagement: Information consumer",  "Engagement: Self-seeking contributor",
+          "Engagement: Vocationalist"
+          )
 modalities_matrix <- as.matrix(modalities_data)
 ```
 
@@ -68,7 +79,7 @@ heatmap(themes_matrix, scale = 'column',col = viridis(256))
 heatmap(themes_matrix, scale = 'column', col = heat.colors(256))
 ```
 
-### Themes Heatmap in {ggplot2}, Viridis colors, Scaled but Unordered
+### Themes Heatmap in {ggplot2}, Viridis colors, Scaled by max value, but Unordered
 
 ```{r, echo=FALSE, fig.width=16, fig.height=9}
 rescale_themes <- function(x) {x * 20 / max(x, na.rm = TRUE)}
@@ -188,8 +199,6 @@ ggplot(themes_to_plot_ordered2, aes(x = name, y = theme)) +
                        1)
         }
         ) +
-        #scale_fill_viridis(discrete = FALSE) +
-        #coord_fixed(ratio = .4) +
         xlab("Participant") +
         scale_x_discrete(position='top') +
         ylab("Thematic Code") +
@@ -223,8 +232,8 @@ rescale_modalities <- function(x) {x * 20 / max(x, na.rm = TRUE)}
 modalities_to_plot_unordered <-
         modalities_data %>%
         rownames_to_column(var = "theme") %>%
-        mutate(across(offline:social_media, rescale_modalities)) %>%
-        pivot_longer(cols = offline:social_media, 
+        mutate(across(Offline:`Social Media`, rescale_modalities)) %>%
+        pivot_longer(cols = Offline:`Social Media`, 
                      names_to = "modality")
 
 ggplot(modalities_to_plot_unordered, aes(x = modality, y = theme)) +
@@ -249,7 +258,7 @@ ggplot(modalities_to_plot_unordered, aes(x = modality, y = theme)) +
         labs(fill = "Scaled Value")
 ```
 
-### Modalities Heatmap in {ggplot2}, Viridis colors, Scaled and Computationally-sorted 
+### Modalities Heatmap in {ggplot2}, Viridis colors, Scaled by max value, and Computationally-sorted 
 
 This final plot uses principal component analysis (PCA) through the {seriation} package to sort and cluster the heatmap both by modalities and themes. 
 
@@ -257,7 +266,7 @@ This final plot uses principal component analysis (PCA) through the {seriation} 
 modalities_scaled_ordered <-
         modalities_data %>%
         rownames_to_column(var = "theme") %>%
-        mutate(across(offline:social_media, rescale_modalities)) %>%
+        mutate(across(Offline:`Social Media`, rescale_modalities)) %>%
         column_to_rownames('theme') %>%
         as.matrix() %>%
         seriate()
@@ -275,7 +284,6 @@ modalities_to_plot_ordered$modality <-
 ggplot(modalities_to_plot_ordered, aes(x = modality, y = theme)) +
         geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
         scale_fill_viridis(discrete = FALSE) +
-        #coord_fixed(ratio = .4) +
         xlab("Modality") +
         ylab("Theme") +
         scale_y_discrete(position='right') +
@@ -296,4 +304,66 @@ ggplot(modalities_to_plot_ordered, aes(x = modality, y = theme)) +
 
 ```{r, include=FALSE, eval=FALSE}
 ggsave("dissertation-modalities-heatmap-sorted.png", width = 16, height = 9)
+```
+
+### Themes Heatmap in {ggplot2}, Viridis colors, Scaled by percent presence, and Computationally-sorted 
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+modalities_quote_count <- c(102, 12,  103)
+modalities_scaled <- modalities_matrix
+for(i in 1:3) {
+       modalities_scaled[, i] <- 
+               100 * modalities_scaled[, i] / modalities_quote_count[i]
+}
+
+modalities_scaled_ordered2 <- seriate(modalities_scaled)
+
+new_levels_scaled_theme2 <- row.names(modalities_matrix)[get_order(modalities_scaled_ordered2, dim=1)]
+new_levels_scaled_modality2 <- colnames(modalities_matrix)[get_order(modalities_scaled_ordered2, dim=2)]
+
+modalities_to_plot_ordered2 <- 
+        modalities_scaled %>%
+        as_tibble() %>%
+        mutate(theme = row.names(modalities_scaled)) %>%
+        select(theme, everything()) %>%
+        pivot_longer(cols = Offline:`Social Media`, 
+                     names_to = "modality")
+modalities_to_plot_ordered2$theme <- 
+        factor(modalities_to_plot_ordered2$theme, levels = new_levels_scaled_theme2)
+modalities_to_plot_ordered2$modality <- 
+        factor(modalities_to_plot_ordered2$modality, levels = new_levels_scaled_modality2)
+
+ggplot(modalities_to_plot_ordered2, aes(x = modality, y = theme)) +
+        geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
+        scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
+                ifelse(x < 60, 
+                       scales::rescale(x,
+                                       to = to,
+                                       from = c(min(x, na.rm = TRUE), 60)),
+                       1)
+        }
+        ) +
+        xlab("Modality") +
+        scale_x_discrete(position='top') +
+        ylab("Thematic Code") +
+        scale_y_discrete(position='right') +
+        theme_bw() +
+        theme(axis.title = element_text(size=32, family='serif'),
+              axis.text = element_text(size=18, family='serif'),
+              legend.title = element_text(size=18, family='serif'), 
+              legend.text = element_text(size=12, family='serif'),
+              legend.position='bottom',
+              legend.background = element_blank(),
+              legend.box.background = element_rect(colour='black'),
+              panel.background = element_blank(),
+              panel.border = element_blank(),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.background = element_blank()
+        ) +
+        labs(fill = "Percentage of Quotations")
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggsave("dissertation-modalities-heatmap-sorted2.png", width = 16, height = 9)
 ```
