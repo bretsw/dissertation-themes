@@ -271,8 +271,10 @@ modalities_scaled_ordered <-
         as.matrix() %>%
         seriate()
 
-new_levels_scaled_theme <- row.names(modalities_matrix)[get_order(modalities_scaled_ordered, dim=1)]
-new_levels_scaled_modality <- colnames(modalities_matrix)[get_order(modalities_scaled_ordered, dim=2)]
+new_levels_scaled_theme <- 
+        row.names(modalities_matrix)[get_order(modalities_scaled_ordered, dim=1)]
+new_levels_scaled_modality <- 
+        colnames(modalities_matrix)[get_order(modalities_scaled_ordered, dim=2)]
 
 modalities_to_plot_ordered <- 
         modalities_to_plot_unordered
