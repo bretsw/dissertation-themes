@@ -1,7 +1,7 @@
 ---
 title: "Dissertation themes"
 author: "K. Bret Staudt Willet"
-date: "7/27/2020"
+date: "8/20/2020"
 output: html_document
 ---
 
@@ -14,8 +14,8 @@ library(hrbrthemes)
 library(viridis)
 library(seriation)
 
-themes <- read_csv("dissertation-code-document-table.csv")
-modalities <- read_csv("dissertation-code-cooccurrence.csv")
+themes <- read_csv("codes-participants.csv")
+modalities <- read_csv("codes-modalities.csv")
 ```
 
 ```{r, include=FALSE}
@@ -27,15 +27,14 @@ names(themes_data) <-
           "Mike", "Simone", "Taylor",  "Wallace")
 row.names(themes_data) <- 
         c("Modality: Offline", "Modality: Online grad school", "Modality: Social media",
-          "Reasons: School resources", "Reasons: Change", 
-          "Reasons: Personal-professional boundaries", "Reasons: Teacher capital",
-          "Reasons: Two-worlds pitfall", "Reasons: Connecting", "Reasons: Enacting practice",
-          "Reasons: Learning through observation", "Reasons: Planning",
+          "Reasons: Lack of resources", "Reasons: School resources available", 
+          "Reasons: Teacher capital", "Reasons: Change", 
+          "Reasons: Two-worlds pitfall", "Reasons: Personal-professional boundaries", 
+          "Reasons: Connecting", "Reasons: Planning", "Reasons: Enacting practice",
           "Supports: Assigned and appreciated", "Supports: Assigned but unhelpful",
           "Supports: Latent",  "Supports: Self-directed",
           "Relationships: In-school", "Relationships: Out-of-school",
-          "Engagement: Information consumer",  "Engagement: Self-seeking contributor",
-          "Engagement: Vocationalist"
+          "Engagement: Consumer", "Engagement: Vocationalist"
           )
 themes_matrix <- as.matrix(themes_data)
 
@@ -44,15 +43,14 @@ modalities_data <-
         column_to_rownames('X1')
 names(modalities_data) <- c("Offline", "Online Grad School", "Social Media")
 row.names(modalities_data) <- 
-        c("Reasons: School resources", "Reasons: Change", 
-          "Reasons: Personal-professional boundaries", "Reasons: Teacher capital",
-          "Reasons: Two-worlds pitfall", "Reasons: Connecting", "Reasons: Enacting practice",
-          "Reasons: Learning through observation", "Reasons: Planning",
+        c("Reasons: Lack of resources", "Reasons: School resources available", 
+          "Reasons: Teacher capital", "Reasons: Change", 
+          "Reasons: Two-worlds pitfall", "Reasons: Personal-professional boundaries", 
+          "Reasons: Connecting", "Reasons: Planning", "Reasons: Enacting practice",
           "Supports: Assigned and appreciated", "Supports: Assigned but unhelpful",
           "Supports: Latent",  "Supports: Self-directed",
           "Relationships: In-school", "Relationships: Out-of-school",
-          "Engagement: Information consumer",  "Engagement: Self-seeking contributor",
-          "Engagement: Vocationalist"
+          "Engagement: Consumer", "Engagement: Vocationalist"
           )
 modalities_matrix <- as.matrix(modalities_data)
 ```
