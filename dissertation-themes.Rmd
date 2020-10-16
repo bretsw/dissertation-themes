@@ -1,7 +1,7 @@
 ---
 title: "Dissertation themes"
 author: "K. Bret Staudt Willet"
-date: "8/20/2020"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -15,6 +15,7 @@ library(viridis)
 library(seriation)
 
 themes <- read_csv("codes-participants.csv")
+themes_words <- read_csv("codes-participants-words.csv")
 modalities <- read_csv("codes-modalities.csv")
 ```
 
@@ -27,29 +28,57 @@ names(themes_data) <-
           "Mike", "Simone", "Taylor",  "Wallace")
 row.names(themes_data) <- 
         c("Modality: Offline", "Modality: Online grad school", "Modality: Social media",
-          "Reasons: Lack of resources", "Reasons: School resources available", 
+          "Reasons: Scarcity of resources", "Reasons: School resources available", 
           "Reasons: Teacher capital", "Reasons: Change", 
-          "Reasons: Two-worlds pitfall", "Reasons: Personal-professional boundaries", 
-          "Reasons: Connecting", "Reasons: Planning", "Reasons: Enacting practice",
+          "Reasons: Conflicting teaching beliefs", 
+          "Reasons: Personal-professional boundaries", 
+          "Reasons: Connecting socially", "Reasons: Planning", 
+          "Reasons: Enacting practice",
           "Supports: Assigned and appreciated", "Supports: Assigned but unhelpful",
           "Supports: Latent",  "Supports: Self-directed",
-          "Relationships: In-school", "Relationships: Out-of-school",
+          "Interpersonal connections: In-school", 
+          "Interpersonal connections: Out-of-school",
           "Engagement: Consumer", "Engagement: Vocationalist"
           )
 themes_matrix <- as.matrix(themes_data)
+
+themes_words_data <-
+        themes_words %>% 
+        filter(X1 != "● 1b-modality-online_grad_school",
+               X1 != "● 2b-reasons-school_resources_available",
+               X1 != "● 2c-reasons-teacher_capital") %>%
+        column_to_rownames('X1')
+names(themes_words_data) <- 
+        c("Amelia", "Anne",  "Blair",  "Hallie", "Julie", 
+          "Mike", "Simone", "Taylor",  "Wallace")
+rownames(themes_words_data) <- 
+        c("RQ4-Modality: Offline", "RQ4-Modality: Social media",
+          "RQ1-Reasons: Scarcity of resources", "RQ1-Reasons: Change", 
+          "RQ1-Reasons: Conflicting teaching beliefs", 
+          "RQ1-Reasons: Personal-professional boundaries", 
+          "RQ1-Reasons: Connecting socially", "RQ1-Reasons: Planning", 
+          "RQ1-Reasons: Enacting practice",
+          "RQ2-Supports: Assigned and appreciated", "RQ2-Supports: Assigned but unhelpful",
+          "RQ2-Supports: Latent",  "RQ2-Supports: Self-directed",
+          "RQ3-Interpersonal connections: In-school", 
+          "RQ3-Interpersonal connections: Out-of-school",
+          "RQ4-Engagement: Consumer", "RQ4-Engagement: Vocationalist"
+          )
+themes_words_matrix <- as.matrix(themes_words_data)
 
 modalities_data <-
         modalities %>% 
         column_to_rownames('X1')
 names(modalities_data) <- c("Offline", "Online Grad School", "Social Media")
 row.names(modalities_data) <- 
-        c("Reasons: Lack of resources", "Reasons: School resources available", 
+        c("Reasons: Scarcity of resources", "Reasons: School resources available", 
           "Reasons: Teacher capital", "Reasons: Change", 
-          "Reasons: Two-worlds pitfall", "Reasons: Personal-professional boundaries", 
-          "Reasons: Connecting", "Reasons: Planning", "Reasons: Enacting practice",
+          "Reasons: Conflicting teaching beliefs", "Reasons: Personal-professional boundaries", 
+          "Reasons: Connecting socially", "Reasons: Planning", "Reasons: Enacting practice",
           "Supports: Assigned and appreciated", "Supports: Assigned but unhelpful",
           "Supports: Latent",  "Supports: Self-directed",
-          "Relationships: In-school", "Relationships: Out-of-school",
+          "Interpersonal connections: In-school", 
+          "Interpersonal connections: Out-of-school",
           "Engagement: Consumer", "Engagement: Vocationalist"
           )
 modalities_matrix <- as.matrix(modalities_data)
@@ -162,6 +191,8 @@ ggsave("dissertation-themes-heatmap-sorted.png", width = 16, height = 9)
 
 ### Themes Heatmap in {ggplot2}, Viridis colors, Scaled by percent presence, and Computationally-sorted 
 
+(This is misleading because themes are not talked about in mutually exclusive ways.)
+
 ```{r, echo=FALSE, fig.width=16, fig.height=9}
 themes_quote_count <- c(36, 35, 26, 35, 38, 28, 34, 26, 38)
 themes_scaled <- themes_matrix
@@ -171,7 +202,6 @@ for(i in 1:9) {
 }
 
 themes_scaled_ordered2 <- seriate(themes_scaled)
-
 new_levels_scaled_theme2 <- row.names(themes_matrix)[get_order(themes_scaled_ordered2, dim=1)]
 new_levels_scaled_name2 <- colnames(themes_matrix)[get_order(themes_scaled_ordered2, dim=2)]
 
@@ -222,6 +252,91 @@ ggplot(themes_to_plot_ordered2, aes(x = name, y = theme)) +
 ggsave("dissertation-themes-heatmap-sorted2.png", width = 16, height = 9)
 ```
 
+### Themes Heatmap in {ggplot2} of word count, Viridis colors, Scaled by max value, and Computationally-sorted 
+
+```{r, echo=FALSE, fig.width=16, fig.height=9}
+rescale_themes_words <- function(x) {x * 100 / max(x, na.rm = TRUE)}
+
+themes_words_scaled_unordered <-
+        themes_words_data %>%
+        rownames_to_column(var = "theme") %>%
+        mutate(across(Amelia:Wallace, rescale_themes_words))
+        
+        #pivot_longer(cols = Amelia:Wallace, names_to = "name")
+
+themes_words_scaled_ordered <-
+        themes_words_scaled_unordered %>%
+        column_to_rownames('theme') %>%
+        as.matrix() %>%
+        seriate()
+
+new_levels_scaled_theme_words <-
+        rownames(themes_words_matrix)[c(3:15, 1:2, 16:17)]
+new_levels_scaled_name_words <- 
+        colnames(themes_words_matrix)[get_order(themes_words_scaled_ordered, dim=2)]
+
+themes_words_scaled_ordered_to_plot <-
+        themes_words_scaled_unordered %>%
+        pivot_longer(cols = Amelia:Wallace, 
+                     names_to = "name")
+
+themes_words_scaled_ordered_to_plot$theme <- 
+        factor(themes_words_scaled_ordered_to_plot$theme, 
+               levels = rev(new_levels_scaled_theme_words))
+themes_words_scaled_ordered_to_plot$name <- 
+        factor(themes_words_scaled_ordered_to_plot$name, 
+               levels = rev(new_levels_scaled_name_words))
+
+
+
+themes_words_scaled_ordered <-
+        themes_words_data %>%
+        rownames_to_column(var = "theme") %>%
+        mutate(across(Amelia:Wallace, rescale_themes_words)) %>%
+        column_to_rownames('theme') %>%
+        as.matrix() %>%
+        seriate()
+
+ggplot(themes_words_scaled_ordered_to_plot, aes(x = name, y = theme)) +
+        geom_tile(aes(fill = value), color = 'white', size = 0.5) + 
+        scale_fill_viridis(rescaler = function(x, to = c(0, 1), from = NULL) {
+                ifelse(x < 95, 
+                       scales::rescale(x,
+                                       to = to,
+                                       from = c(min(x, na.rm = TRUE), 95)),
+                       1)
+        }
+        ) +
+        xlab("Participant") +
+        scale_x_discrete(position = 'top') +
+        ylab("Thematic Code") +
+        scale_y_discrete(position = 'right') +
+        theme_bw() +
+        theme(axis.title = element_text(size = 32, family = 'serif'),
+              axis.text = element_text(size = 18, family = 'serif'),
+              legend.title = element_text(size = 18, family = 'serif'), 
+              legend.text = element_text(size = 12, family = 'serif'),
+              legend.position = 'bottom',
+              legend.background = element_blank(),
+              legend.box.background = element_rect(colour = 'black'),
+              legend.margin=margin(c(5,20,5,10)), #order: top, right, bottom, left
+              panel.background = element_blank(),
+              panel.border = element_blank(),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.background = element_blank()
+        ) +
+        labs(fill = "Rescaled Word Count")
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggsave("dissertation-themes-wordcount-heatmap-sorted.png", width = 16, height = 9)
+```
+
+
+
+
+
 ### Modalities Heatmap in {ggplot2}, Viridis colors, Scaled but Unordered
 
 ```{r, echo=FALSE, fig.width=16, fig.height=9}
@@ -240,24 +355,23 @@ ggplot(modalities_to_plot_unordered, aes(x = modality, y = theme)) +
         #coord_fixed(ratio = .4) +
         xlab("Modality") +
         ylab("Theme") +
-        scale_y_discrete(position='right') +
+        scale_y_discrete(position = 'right') +
         theme_bw() +
         theme(axis.title = element_text(size=32, family='serif'),
               axis.text = element_text(size=18, family='serif'),
-              legend.title=element_text(size=18, family='serif'), 
-              legend.text=element_text(size=12, family='serif'),
-              legend.position='left',
-              panel.background=element_blank(),
-              panel.border=element_blank(),
-              panel.grid.major=element_blank(),
-              panel.grid.minor=element_blank(),
-              plot.background=element_blank()
+              legend.title = element_text(size=18, family='serif'), 
+              legend.text = element_text(size=12, family='serif'),
+              legend.position = 'left',
+              panel.background = element_blank(),
+              panel.border = element_blank(),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.background = element_blank()
         ) +
         labs(fill = "Scaled Value")
 ```
 
 ### Modalities Heatmap in {ggplot2}, Viridis colors, Scaled by max value, and Computationally-sorted 
-
 This final plot uses principal component analysis (PCA) through the {seriation} package to sort and cluster the heatmap both by modalities and themes. 
 
 ```{r, echo=FALSE, fig.width=16, fig.height=9}
